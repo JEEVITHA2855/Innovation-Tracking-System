@@ -1,0 +1,73 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement()) @map("user_id")
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("innovator")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ideas         Idea[]         @relation("InnovatorIdeas")
+  reviews       Review[]       @relation("ReviewerReviews")
+  notifications Notification[]
+  assignedIdeas Idea[]         @relation("ReviewerAssignments")
+
+  @@map("users")
+}
+
+model Idea {
+  id            Int        @id @default(autoincrement()) @map("idea_id")
+  title         String
+  description   String
+  domain        String
+  status        String @default("Submitted")
+  innovatorId   Int        @map("innovator_id")
+  reviewerId    Int?       @map("reviewer_id")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  innovator User     @relation("InnovatorIdeas", fields: [innovatorId], references: [id])
+  reviewer  User?    @relation("ReviewerAssignments", fields: [reviewerId], references: [id])
+  reviews   Review[]
+
+  @@map("ideas")
+}
+
+model Review {
+  id              Int    @id @default(autoincrement()) @map("review_id")
+  ideaId          Int    @map("idea_id")
+  reviewerId      Int    @map("reviewer_id")
+  innovationScore Int    @map("innovation_score")
+  feasibilityScore Int   @map("feasibility_score")
+  impactScore     Int    @map("impact_score")
+  feedback        String
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  idea     Idea @relation(fields: [ideaId], references: [id])
+  reviewer User @relation("ReviewerReviews", fields: [reviewerId], references: [id])
+
+  @@map("reviews")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement()) @map("notification_id")
+  userId    Int      @map("user_id")
+  message   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}

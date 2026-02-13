@@ -1,36 +1,33 @@
 {
   "name": "innovation-tracking-system",
   "version": "1.0.0",
-  "description": "",
-  "type": "module",
+  "description": "Full-stack Innovation Tracking System with React frontend and Node.js backend",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "install:all": "npm run install:server && npm run install:client",
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JEEVITHA2855/Innovation-Tracking-System.git"
+    "url": "https://github.com/JEEVITHA2855/Innovation-Tracking-System.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/JEEVITHA2855/Innovation-Tracking-System/issues"
-  },
-  "homepage": "https://github.com/JEEVITHA2855/Innovation-Tracking-System#readme",
-  "dependencies": {
-    "lucide-react": "^0.563.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.0",
-    "recharts": "^3.7.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.4",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "vite": "^7.3.1"
-  }
+  "keywords": [
+    "innovation",
+    "tracking",
+    "react",
+    "nodejs",
+    "postgresql",
+    "express",
+    "prisma"
+  ],
+  "author": "Organization",
+  "license": "ISC"
 }
