@@ -1,4 +1,5 @@
 const ideaService = require('../services/idea.service');
+const { emitIdeaEvent } = require('../utils/socket');
 
 /**
  * Idea Controller — handles HTTP requests for idea management
@@ -19,6 +20,11 @@ class IdeaController {
         description,
         domain,
         innovatorId: req.user.id
+      });
+
+      // Emit real-time event for new idea
+      emitIdeaEvent('created', idea, {
+        message: `New idea "${idea.title}" submitted by ${req.user.name}`
       });
 
       res.status(201).json({ success: true, data: idea });
@@ -79,6 +85,12 @@ class IdeaController {
         req.user.id
       );
 
+      // Emit real-time event for status update
+      emitIdeaEvent('status_updated', idea, {
+        message: `Idea status updated to "${status}"`,
+        updatedBy: req.user.name
+      });
+
       res.json({ success: true, data: idea });
     } catch (error) {
       next(error);
@@ -99,6 +111,12 @@ class IdeaController {
         parseInt(req.params.id),
         reviewerId
       );
+
+      // Emit real-time event for reviewer assignment
+      emitIdeaEvent('assigned', idea, {
+        message: `Reviewer assigned to idea "${idea.title}"`,
+        assignedBy: req.user.name
+      });
 
       res.json({ success: true, data: idea });
     } catch (error) {

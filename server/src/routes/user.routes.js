@@ -14,4 +14,10 @@ router.get('/role/:role', authorize('admin'), (req, res, next) => userController
 // GET /api/users/:id — Get user by ID
 router.get('/:id', (req, res, next) => userController.getById(req, res, next));
 
+// PUT /api/users/:id — Update user (Admin)
+router.put('/:id', authorize('admin'), (req, res, next) => userController.update(req, res, next));
+
+// DELETE /api/users/:id — Delete user (Admin only)
+router.delete('/:id', authorize('admin'), (req, res, next) => userController.delete(req, res, next));
+
 module.exports = router;

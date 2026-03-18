@@ -1,4 +1,5 @@
 const reviewService = require('../services/review.service');
+const { emitIdeaEvent } = require('../utils/socket');
 
 /**
  * Review Controller — handles HTTP requests for reviews
@@ -23,6 +24,19 @@ class ReviewController {
         impactScore,
         feedback,
         decision
+      });
+
+      // Emit real-time event for idea review
+      emitIdeaEvent('reviewed', review.idea, {
+        message: `Idea "${review.idea.title}" has been reviewed`,
+        review: {
+          innovationScore,
+          feasibilityScore,
+          impactScore,
+          feedback,
+          decision
+        },
+        reviewerName: req.user.name
       });
 
       res.status(201).json({ success: true, data: review });

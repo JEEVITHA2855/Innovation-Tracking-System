@@ -36,6 +36,10 @@ class UserRepository {
   async delete(id) {
     return prisma.user.delete({ where: { id } });
   }
+
+  async countByRole(role) {
+    return prisma.user.count({ where: { role } });
+  }
 }
 
 module.exports = new UserRepository();

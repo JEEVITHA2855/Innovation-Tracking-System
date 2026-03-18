@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { useRealTime } from '../../context/RealTimeContext'
 import { ideasAPI } from '../../services/api'
 import Card from '../../components/common/Card'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loading from '../../components/common/Loading'
-import { FileCheck, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { FileCheck, Clock, CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react'
 
 const statusMap = {
   'Submitted': 'Submitted',
@@ -20,10 +21,27 @@ const ReviewerDashboard = () => {
   const navigate = useNavigate()
   const [ideas, setIdeas] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Real-time functionality
+  const { 
+    isConnected, 
+    ideasNeedRefresh,
+    eventLog,
+    resetRefreshFlags 
+  } = useRealTime()
 
   useEffect(() => {
     loadIdeas()
   }, [])
+
+  // Auto-refresh when real-time updates indicate changes
+  useEffect(() => {
+    if (ideasNeedRefresh) {
+      console.log('👨‍💼 Refreshing reviewer dashboard due to real-time updates')
+      loadIdeas()
+      resetRefreshFlags()
+    }
+  }, [ideasNeedRefresh])
 
   const loadIdeas = async () => {
     try {
@@ -44,8 +62,37 @@ const ReviewerDashboard = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome, {currentUser?.name}</h1>
-        <p className="text-gray-600 mt-2">Review and evaluate assigned ideas</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome, {currentUser?.name}</h1>
+            <p className="text-gray-600 mt-2">Review and evaluate assigned ideas</p>
+          </div>
+          
+          {/* Real-time connection status */}
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+            isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+            <span>{isConnected ? 'Live Updates' : 'Disconnected'}</span>
+          </div>
+        </div>
+        
+        {/* Recent activity */}
+        {eventLog.length > 0 && (
+          <div className="mt-4 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Recent Activity</h3>
+            <div className="space-y-1">
+              {eventLog.filter(e => e.type === 'reviewer_assigned').slice(-2).map((event, index) => (
+                <div key={index} className="text-sm text-gray-600">
+                  <span className="text-gray-400">
+                    {new Date(event.timestamp).toLocaleTimeString()}
+                  </span>
+                  {' '} {event.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

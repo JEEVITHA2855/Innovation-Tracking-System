@@ -1,19 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ideasAPI } from '../../services/api'
+import { useRealTime } from '../../context/RealTimeContext'
 import Card from '../../components/common/Card'
 import Loading from '../../components/common/Loading'
-import { TrendingUp, CheckCircle, Clock, FileText, BarChart, Users } from 'lucide-react'
+import { TrendingUp, CheckCircle, Clock, FileText, BarChart, Users, Wifi, WifiOff } from 'lucide-react'
 
 const AdminDashboard = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
   const [error, setError] = useState('')
+  
+  // Real-time functionality
+  const { 
+    isConnected, 
+    analyticsNeedRefresh, 
+    ideasNeedRefresh, 
+    latestIdea,
+    eventLog,
+    resetRefreshFlags 
+  } = useRealTime()
 
   useEffect(() => {
     loadData()
   }, [])
+
+  // Auto-refresh when real-time updates indicate changes
+  useEffect(() => {
+    if (analyticsNeedRefresh || ideasNeedRefresh) {
+      console.log('📊 Refreshing admin dashboard data due to real-time updates')
+      loadData()
+      resetRefreshFlags()
+    }
+  }, [analyticsNeedRefresh, ideasNeedRefresh])
 
   const loadData = async () => {
     try {
@@ -44,8 +64,46 @@ const AdminDashboard = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">System overview and analytics</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">System overview and analytics</p>
+          </div>
+          
+          {/* Real-time connection status */}
+          <div className="flex items-center space-x-4">
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+              isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+              <span>{isConnected ? 'Live Updates' : 'Disconnected'}</span>
+            </div>
+            
+            {/* Latest idea notification */}
+            {latestIdea && (
+              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                💡 New: {latestIdea.title}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Real-time event log */}
+        {eventLog.length > 0 && (
+          <div className="mt-4 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Recent Activity</h3>
+            <div className="space-y-1">
+              {eventLog.slice(-3).map((event, index) => (
+                <div key={index} className="text-sm text-gray-600">
+                  <span className="text-gray-400">
+                    {new Date(event.timestamp).toLocaleTimeString()}
+                  </span>
+                  {' '} {event.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

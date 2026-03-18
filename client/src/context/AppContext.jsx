@@ -11,13 +11,19 @@ export const useApp = () => {
   return context
 }
 
+// Use sessionStorage for tab-specific sessions (allows multiple users in different tabs)
+// Use localStorage for persistent sessions (stays logged in across tabs)
+const USE_SESSION_STORAGE = true; // Set to false for production to use localStorage
+
+const storage = USE_SESSION_STORAGE ? sessionStorage : localStorage;
+
 export const AppProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('auth_user')
+    const saved = storage.getItem('auth_user')
     return saved ? JSON.parse(saved) : null
   })
 
-  const [token, setToken] = useState(() => localStorage.getItem('auth_token'))
+  const [token, setToken] = useState(() => storage.getItem('auth_token'))
   const [toast, setToast] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -26,11 +32,16 @@ export const AppProvider = ({ children }) => {
   // Persist auth state
   useEffect(() => {
     if (currentUser && token) {
-      localStorage.setItem('auth_user', JSON.stringify(currentUser))
-      localStorage.setItem('auth_token', token)
+      storage.setItem('auth_user', JSON.stringify(currentUser))
+      storage.setItem('auth_token', token)
     } else {
-      localStorage.removeItem('auth_user')
-      localStorage.removeItem('auth_token')
+      storage.removeItem('auth_user')
+      storage.removeItem('auth_token')
+      // Also clear from localStorage if using sessionStorage
+      if (USE_SESSION_STORAGE) {
+        localStorage.removeItem('auth_user')
+        localStorage.removeItem('auth_token')
+      }
     }
   }, [currentUser, token])
 
@@ -44,8 +55,7 @@ export const AppProvider = ({ children }) => {
       showToast('Login successful!', 'success')
       return user
     } catch (error) {
-      const msg = error.response?.data?.message || 'Login failed'
-      showToast(msg, 'error')
+      // Don't show toast for login errors - let the Login page handle error display
       throw error
     } finally {
       setLoading(false)
@@ -62,8 +72,7 @@ export const AppProvider = ({ children }) => {
       showToast('Registration successful!', 'success')
       return user
     } catch (error) {
-      const msg = error.response?.data?.message || 'Registration failed'
-      showToast(msg, 'error')
+      // Don't show toast for registration errors - let the Register page handle error display
       throw error
     } finally {
       setLoading(false)
@@ -73,8 +82,13 @@ export const AppProvider = ({ children }) => {
   const logout = () => {
     setCurrentUser(null)
     setToken(null)
-    localStorage.removeItem('auth_user')
-    localStorage.removeItem('auth_token')
+    storage.removeItem('auth_user')
+    storage.removeItem('auth_token')
+    // Also clear from localStorage if using sessionStorage
+    if (USE_SESSION_STORAGE) {
+      localStorage.removeItem('auth_user')
+      localStorage.removeItem('auth_token')
+    }
   }
 
   const showToast = (message, type = 'success') => {

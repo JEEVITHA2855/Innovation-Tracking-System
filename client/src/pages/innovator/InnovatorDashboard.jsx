@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { useRealTime } from '../../context/RealTimeContext'
 import { ideasAPI } from '../../services/api'
 import Card from '../../components/common/Card'
 import StatusBadge from '../../components/common/StatusBadge'
 import Loading from '../../components/common/Loading'
-import { Lightbulb, CheckCircle, Clock, AlertTriangle, PlusCircle } from 'lucide-react'
+import { Lightbulb, CheckCircle, Clock, AlertTriangle, PlusCircle, Wifi, WifiOff } from 'lucide-react'
 
 const statusMap = {
   'Submitted': 'Submitted',
@@ -20,10 +21,29 @@ const InnovatorDashboard = () => {
   const navigate = useNavigate()
   const [ideas, setIdeas] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Real-time functionality
+  const { 
+    isConnected, 
+    ideasNeedRefresh, 
+    reviewsNeedRefresh,
+    latestReview,
+    eventLog,
+    resetRefreshFlags 
+  } = useRealTime()
 
   useEffect(() => {
     loadIdeas()
   }, [])
+
+  // Auto-refresh when real-time updates indicate changes
+  useEffect(() => {
+    if (ideasNeedRefresh || reviewsNeedRefresh) {
+      console.log('💡 Refreshing innovator dashboard due to real-time updates')
+      loadIdeas()
+      resetRefreshFlags()
+    }
+  }, [ideasNeedRefresh, reviewsNeedRefresh])
 
   const loadIdeas = async () => {
     try {
@@ -53,6 +73,23 @@ const InnovatorDashboard = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome, {currentUser?.name}</h1>
           <p className="text-gray-600 mt-2">Track your innovations</p>
+          
+          {/* Real-time connection status */}
+          <div className="flex items-center space-x-4 mt-2">
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+              isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+              <span>{isConnected ? 'Live Updates' : 'Disconnected'}</span>
+            </div>
+            
+            {/* Latest review notification */}
+            {latestReview && (
+              <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                📝 New Review Available
+              </div>
+            )}
+          </div>
         </div>
         <button onClick={() => navigate('/innovator/submit')} className="btn-primary flex items-center gap-2">
           <PlusCircle className="w-5 h-5" />

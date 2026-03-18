@@ -5,12 +5,14 @@ import AdminDashboard from '../pages/admin/AdminDashboard'
 import AllIdeas from '../pages/admin/AllIdeas'
 import Analytics from '../pages/admin/Analytics'
 import ManageReviewers from '../pages/admin/ManageReviewers'
+import ManageUsers from '../pages/admin/ManageUsers'
 
 const AdminRoutes = () => {
   const links = [
     { path: '/admin', label: 'Dashboard', icon: 'dashboard' },
     { path: '/admin/ideas', label: 'All Ideas', icon: 'ideas' },
     { path: '/admin/reviewers', label: 'Reviewers', icon: 'users' },
+    { path: '/admin/users', label: 'Manage Users', icon: 'users' },
     { path: '/admin/analytics', label: 'Analytics', icon: 'analytics' }
   ]
 
@@ -20,6 +22,7 @@ const AdminRoutes = () => {
         <Route path="/" element={<AdminDashboard />} />
         <Route path="/ideas" element={<AllIdeas />} />
         <Route path="/reviewers" element={<ManageReviewers />} />
+        <Route path="/users" element={<ManageUsers />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="*" element={<Navigate to="/admin" />} />
       </Routes>

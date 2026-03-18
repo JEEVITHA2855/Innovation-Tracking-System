@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const ideaController = require('../controllers/idea.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { validate } = require('../middlewares/validation.middleware');
+const { createIdeaSchema, updateStatusSchema, assignReviewerSchema } = require('../validators/idea.validator');
 
 // All idea routes are protected
 router.use(authenticate);
 
 // POST /api/ideas — Submit a new idea (Innovator)
-router.post('/', authorize('innovator'), (req, res, next) => ideaController.create(req, res, next));
+router.post('/', authorize('innovator'), validate(createIdeaSchema), (req, res, next) => ideaController.create(req, res, next));
 
 // GET /api/ideas — Get all ideas (Admin)
 router.get('/', authorize('admin'), (req, res, next) => ideaController.getAll(req, res, next));
@@ -25,9 +27,9 @@ router.get('/assigned', authorize('reviewer'), (req, res, next) => ideaControlle
 router.get('/:id', (req, res, next) => ideaController.getById(req, res, next));
 
 // PUT /api/ideas/:id/status — Update idea status
-router.put('/:id/status', authorize('admin', 'reviewer'), (req, res, next) => ideaController.updateStatus(req, res, next));
+router.put('/:id/status', authorize('admin', 'reviewer'), validate(updateStatusSchema), (req, res, next) => ideaController.updateStatus(req, res, next));
 
 // PUT /api/ideas/:id/assign — Assign reviewer to idea (Admin)
-router.put('/:id/assign', authorize('admin'), (req, res, next) => ideaController.assignReviewer(req, res, next));
+router.put('/:id/assign', authorize('admin'), validate(assignReviewerSchema), (req, res, next) => ideaController.assignReviewer(req, res, next));
 
 module.exports = router;

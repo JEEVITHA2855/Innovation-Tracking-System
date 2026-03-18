@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+// Use sessionStorage for tab-specific sessions (allows multiple users in different tabs)
+const USE_SESSION_STORAGE = true; // Match AppContext setting
+const storage = USE_SESSION_STORAGE ? sessionStorage : localStorage;
+
 // Create axios instance with defaults
 const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -10,7 +14,7 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  const token = storage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,8 +26,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
+      storage.removeItem('auth_token');
+      storage.removeItem('auth_user');
+      if (USE_SESSION_STORAGE) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+      }
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -74,6 +82,8 @@ export const usersAPI = {
   getAll: () => api.get('/users'),
   getByRole: (role) => api.get(`/users/role/${role}`),
   getById: (id) => api.get(`/users/${id}`),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  delete: (id) => api.delete(`/users/${id}`),
 };
 
 export default api;

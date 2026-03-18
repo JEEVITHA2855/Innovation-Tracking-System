@@ -28,7 +28,17 @@ const Login = () => {
       }
       navigate(rolePaths[user.role] || '/')
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.')
+      const errorMessage = err.response?.data?.message || 'Login failed. Please check your credentials and try again.'
+      setError(errorMessage)
+      // Don't clear the error - let user see it until they interact with form
+    }
+  }
+
+  // Clear error when user starts typing
+  const handleInputChange = (field, value) => {
+    setForm({ ...form, [field]: value })
+    if (error) {
+      setError('')
     }
   }
 
@@ -66,7 +76,7 @@ const Login = () => {
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Enter your email"
                 />
@@ -80,7 +90,7 @@ const Login = () => {
                 <input
                   type="password"
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Enter your password"
                 />

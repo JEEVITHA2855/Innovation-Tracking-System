@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useApp } from './context/AppContext'
+import { RealTimeProvider } from './context/RealTimeContext'
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -13,7 +14,7 @@ function App() {
   const { currentUser } = useApp()
 
   return (
-    <>
+    <RealTimeProvider>
       <Routes>
         {!currentUser ? (
           // Public routes (when not logged in)
@@ -29,16 +30,16 @@ function App() {
             <Route path="/innovator/*" element={<InnovatorRoutes />} />
             <Route path="/reviewer/*" element={<ReviewerRoutes />} />
             <Route path="/admin/*" element={<AdminRoutes />} />
-            <Route path="*" element={
-              currentUser.role === 'innovator' ? <InnovatorRoutes /> :
+            <Route path="/*" element={
+              currentUser.role === 'admin' ? <AdminRoutes /> :
               currentUser.role === 'reviewer' ? <ReviewerRoutes /> :
-              <AdminRoutes />
+              <InnovatorRoutes />
             } />
           </>
         )}
       </Routes>
       <Toast />
-    </>
+    </RealTimeProvider>
   )
 }
 

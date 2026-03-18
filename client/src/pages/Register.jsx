@@ -43,7 +43,17 @@ const Register = () => {
       }
       navigate(rolePaths[user.role] || '/')
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.')
+      const errorMessage = err.response?.data?.message || 'Registration failed. Please check your details and try again.'
+      setError(errorMessage)
+      // Don't clear the error - let user see it until they interact with form
+    }
+  }
+
+  // Clear error when user starts typing
+  const handleInputChange = (field, value) => {
+    setForm({ ...form, [field]: value })
+    if (error) {
+      setError('')
     }
   }
 
@@ -87,7 +97,7 @@ const Register = () => {
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Enter your full name"
                 />
@@ -101,7 +111,7 @@ const Register = () => {
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Enter your email"
                 />
@@ -115,7 +125,7 @@ const Register = () => {
                 <input
                   type="password"
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Create a password (min 6 chars)"
                 />
@@ -129,7 +139,7 @@ const Register = () => {
                 <input
                   type="password"
                   value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   className="input-field pl-10"
                   placeholder="Confirm your password"
                 />
@@ -143,7 +153,10 @@ const Register = () => {
                   <button
                     key={role.value}
                     type="button"
-                    onClick={() => setForm({ ...form, role: role.value })}
+                    onClick={() => {
+                      setForm({ ...form, role: role.value })
+                      if (error) setError('')
+                    }}
                     className={`p-3 rounded-lg border text-center transition-all ${
                       form.role === role.value
                         ? 'border-primary-500 bg-primary-50 text-primary-700'
