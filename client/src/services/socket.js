@@ -24,6 +24,7 @@ class SocketService {
       auth: {
         token: auth.token
       },
+      withCredentials: true,
       transports: ['websocket', 'polling']
     });
 

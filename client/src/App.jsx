@@ -9,6 +9,7 @@ import InnovatorRoutes from './routes/InnovatorRoutes'
 import ReviewerRoutes from './routes/ReviewerRoutes'
 import AdminRoutes from './routes/AdminRoutes'
 import Toast from './components/common/Toast'
+import ProtectedRoute from './components/common/ProtectedRoute'
 
 function App() {
   const { currentUser } = useApp()
@@ -27,9 +28,9 @@ function App() {
         ) : (
           // Protected routes (when logged in)
           <>
-            <Route path="/innovator/*" element={<InnovatorRoutes />} />
-            <Route path="/reviewer/*" element={<ReviewerRoutes />} />
-            <Route path="/admin/*" element={<AdminRoutes />} />
+            <Route path="/innovator/*" element={<ProtectedRoute allowRoles={['innovator']}><InnovatorRoutes /></ProtectedRoute>} />
+            <Route path="/reviewer/*" element={<ProtectedRoute allowRoles={['reviewer']}><ReviewerRoutes /></ProtectedRoute>} />
+            <Route path="/admin/*" element={<ProtectedRoute allowRoles={['admin']}><AdminRoutes /></ProtectedRoute>} />
             <Route path="/*" element={
               currentUser.role === 'admin' ? <AdminRoutes /> :
               currentUser.role === 'reviewer' ? <ReviewerRoutes /> :

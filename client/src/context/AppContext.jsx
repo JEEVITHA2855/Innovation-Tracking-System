@@ -13,7 +13,7 @@ export const useApp = () => {
 
 // Use sessionStorage for tab-specific sessions (allows multiple users in different tabs)
 // Use localStorage for persistent sessions (stays logged in across tabs)
-const USE_SESSION_STORAGE = true; // Set to false for production to use localStorage
+const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === 'true'
 
 const storage = USE_SESSION_STORAGE ? sessionStorage : localStorage;
 
@@ -49,9 +49,9 @@ export const AppProvider = ({ children }) => {
     setLoading(true)
     try {
       const res = await authAPI.login({ email, password })
-      const { user, token: jwt } = res.data.data
+      const { user, accessToken } = res.data.data
       setCurrentUser(user)
-      setToken(jwt)
+      setToken(accessToken)
       showToast('Login successful!', 'success')
       return user
     } catch (error) {
@@ -66,9 +66,9 @@ export const AppProvider = ({ children }) => {
     setLoading(true)
     try {
       const res = await authAPI.register({ name, email, password, role })
-      const { user, token: jwt } = res.data.data
+      const { user, accessToken } = res.data.data
       setCurrentUser(user)
-      setToken(jwt)
+      setToken(accessToken)
       showToast('Registration successful!', 'success')
       return user
     } catch (error) {
@@ -79,7 +79,13 @@ export const AppProvider = ({ children }) => {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authAPI.logout()
+    } catch (error) {
+      // Continue clearing local auth state even if API logout fails.
+    }
+
     setCurrentUser(null)
     setToken(null)
     storage.removeItem('auth_user')

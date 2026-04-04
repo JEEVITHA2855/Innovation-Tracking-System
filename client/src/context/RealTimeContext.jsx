@@ -152,16 +152,15 @@ export const RealTimeProvider = ({ children }) => {
 
   // Initialize socket connection when user is authenticated
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5003';
-      const authToken = localStorage.getItem('auth_token');
+    if (isAuthenticated && currentUser && token) {
+      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       
       console.log('🔌 Initializing socket connection...');
       
       socketService.connect(serverUrl, {
         userId: currentUser.id,
         role: currentUser.role,
-        token: authToken
+        token
       });
 
       // Update connection status
@@ -216,7 +215,7 @@ export const RealTimeProvider = ({ children }) => {
         dispatch({ type: ACTIONS.SET_CONNECTED, payload: false });
       };
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser, token]);
 
   // Helper functions for components
   const resetRefreshFlags = () => {
