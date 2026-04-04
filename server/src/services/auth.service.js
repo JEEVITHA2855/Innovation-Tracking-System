@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const prisma = require('../config/database');
 const userRepository = require('../repositories/user.repository');
 
 /**
@@ -37,12 +39,14 @@ class AuthService {
       role
     });
 
-    // Generate token
-    const token = this._generateToken(user);
+    // Generate tokens
+    const accessToken = this._generateAccessToken(user);
+    const refreshToken = await this._issueRefreshToken(user);
 
     return {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      token
+      accessToken,
+      refreshToken
     };
   }
 
@@ -66,24 +70,140 @@ class AuthService {
       throw error;
     }
 
-    // Generate token
-    const token = this._generateToken(user);
+    // Generate tokens
+    const accessToken = this._generateAccessToken(user);
+    const refreshToken = await this._issueRefreshToken(user);
 
     return {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
-      token
+      accessToken,
+      refreshToken
     };
+  }
+
+  async refreshAccessToken(rawRefreshToken) {
+    const payload = this._verifyRefreshToken(rawRefreshToken);
+    const hashedToken = this._hashToken(rawRefreshToken);
+
+    const stored = await prisma.refreshToken.findFirst({
+      where: {
+        token: hashedToken,
+        userId: payload.id,
+        revokedAt: null,
+        expiresAt: { gt: new Date() }
+      }
+    });
+
+    if (!stored) {
+      const error = new Error('Refresh token is invalid or expired');
+      error.status = 401;
+      throw error;
+    }
+
+    const user = await userRepository.findById(payload.id);
+    if (!user) {
+      const error = new Error('User not found');
+      error.status = 401;
+      throw error;
+    }
+
+    await prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: { revokedAt: new Date() }
+    });
+
+    const accessToken = this._generateAccessToken(user);
+    const refreshToken = await this._issueRefreshToken(user);
+
+    return {
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      accessToken,
+      refreshToken
+    };
+  }
+
+  async revokeRefreshToken(rawRefreshToken) {
+    if (!rawRefreshToken) {
+      return;
+    }
+
+    const hashedToken = this._hashToken(rawRefreshToken);
+    await prisma.refreshToken.updateMany({
+      where: { token: hashedToken, revokedAt: null },
+      data: { revokedAt: new Date() }
+    });
+  }
+
+  async revokeAllForUser(userId) {
+    await prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() }
+    });
   }
 
   /**
    * Generate JWT token
    */
-  _generateToken(user) {
+  _generateAccessToken(user) {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
     );
+  }
+
+  _generateRefreshToken(user) {
+    return jwt.sign(
+      { id: user.id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+    );
+  }
+
+  _verifyRefreshToken(rawRefreshToken) {
+    try {
+      return jwt.verify(rawRefreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+      const authError = new Error('Invalid refresh token');
+      authError.status = 401;
+      throw authError;
+    }
+  }
+
+  async _issueRefreshToken(user) {
+    const rawToken = this._generateRefreshToken(user);
+    const token = this._hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + this._refreshTtlMs());
+
+    await prisma.refreshToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    return rawToken;
+  }
+
+  _refreshTtlMs() {
+    const ttl = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+    const match = /^([0-9]+)([smhd])$/i.exec(ttl);
+    if (!match) {
+      return 7 * 24 * 60 * 60 * 1000;
+    }
+
+    const value = Number(match[1]);
+    const unit = match[2].toLowerCase();
+
+    if (unit === 's') return value * 1000;
+    if (unit === 'm') return value * 60 * 1000;
+    if (unit === 'h') return value * 60 * 60 * 1000;
+    return value * 24 * 60 * 60 * 1000;
+  }
+
+  _hashToken(rawToken) {
+    return crypto.createHash('sha256').update(rawToken).digest('hex');
   }
 }
 

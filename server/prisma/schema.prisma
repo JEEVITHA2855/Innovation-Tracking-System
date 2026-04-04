@@ -22,6 +22,7 @@ model User {
   reviews       Review[]       @relation("ReviewerReviews")
   notifications Notification[]
   assignedIdeas Idea[]         @relation("ReviewerAssignments")
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -70,4 +71,17 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 
   @@map("notifications")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    Int       @map("user_id")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }

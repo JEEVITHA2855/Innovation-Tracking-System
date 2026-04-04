@@ -1,4 +1,4 @@
-const reportService = require('../services/reportService');
+const reportService = require('../services/report.service');
 
 /**
  * Report Controller — handles HTTP requests for analytics/reports
