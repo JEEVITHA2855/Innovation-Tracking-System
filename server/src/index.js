@@ -209,7 +209,7 @@ async function startServer() {
       console.log('Socket.IO server ready for real-time connections');
     });
   } catch (error) {
-    console.error('Failed to connect to PostgreSQL using DATABASE_URL');
+    console.error('Failed to connect to database using DATABASE_URL');
     console.error(error.message);
     process.exit(1);
   }
