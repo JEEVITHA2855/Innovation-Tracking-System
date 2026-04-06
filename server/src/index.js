@@ -23,6 +23,9 @@ const server = http.createServer(app);
 const API_PREFIX = '/api/v1';
 const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
 
+// Required on Render/other proxies so secure cookies work correctly over HTTPS.
+app.set('trust proxy', 1);
+
 for (const key of requiredEnvVars) {
   if (!process.env[key]) {
     throw new Error(`Missing required environment variable: ${key}`);
@@ -40,7 +43,11 @@ const normalizeOrigin = (value) => {
   }
 };
 
-const allowedOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:3000')
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ||
+  process.env.CLIENT_URL ||
+  'https://innovation-tracking-system.vercel.app,https://www.innovation-tracking-system.vercel.app,http://localhost:5173,http://localhost:3000'
+)
   .split(',')
   .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);

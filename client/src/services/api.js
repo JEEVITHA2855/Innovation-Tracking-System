@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const normalizeApiBaseUrl = (url) => (url || 'http://localhost:5000').replace(/\/(api\/v1|api)\/?$/i, '');
+const API_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
 
 // Use sessionStorage for tab-specific sessions (allows multiple users in different tabs)
 const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === 'true';

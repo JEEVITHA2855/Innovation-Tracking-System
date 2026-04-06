@@ -149,11 +149,12 @@ export const RealTimeProvider = ({ children }) => {
   const [state, dispatch] = useReducer(realTimeReducer, initialState);
   const { currentUser, token } = useApp();
   const isAuthenticated = !!currentUser;
+  const normalizeApiBaseUrl = (url) => (url || 'http://localhost:5000').replace(/\/(api\/v1|api)\/?$/i, '');
 
   // Initialize socket connection when user is authenticated
   useEffect(() => {
     if (isAuthenticated && currentUser && token) {
-      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const serverUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
       
       console.log('🔌 Initializing socket connection...');
       
